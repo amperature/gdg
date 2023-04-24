@@ -4,6 +4,7 @@ function love.load()
     das = 0
     arr = 6
     dasdirection = 'right'
+    bgImage = love.graphics.newImage("tetgrand.png")
 end
 
 function board()
@@ -16,10 +17,10 @@ function verticalControls()
         if dasdirection == 'left' then
             das = das + 1 --this is right
             if das > 15 then
-                x = x - 40
+                x = x - 25
                 das = das - arr
             elseif das == 1 then
-                x = x - 40
+                x = x - 25
             end
         end
     elseif love.keyboard.isDown('right') then
@@ -27,10 +28,10 @@ function verticalControls()
         if dasdirection == 'right' then
             das = das + 1 --this is right
             if das > 15 then
-                x = x + 40
+                x = x + 25
                 das = das - arr
             elseif das == 1 then
-                x = x + 40
+                x = x + 25
             end
         end
     else 
@@ -39,6 +40,15 @@ function verticalControls()
     --if love.keyboard.isDown('down') then
     --    y = y + 10
     --end
+end
+
+function board()
+    if x > 500 then
+        x = 500
+    elseif x < 275 then
+        x = 500
+    if y > 520 then
+        y > 520
 end
 
 function horizontalControls()
@@ -58,8 +68,12 @@ end
 
 
 function love.draw()
-    dave = love.graphics.rectangle("line", x, y, 40, 40)
+    love.graphics.draw(bgImage, 0, 0)
+    --love.graphics.draw(dave, x, y)
     board()
     love.graphics.print(dasdirection, 0, 0)
     love.graphics.print(das, 0, 30)
+    love.graphics.print(x, 100, 30)
+    love.graphics.print(y, 100, 50)
+    dave = love.graphics.rectangle("line", x, y, 25, 25)
 end
