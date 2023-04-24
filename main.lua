@@ -47,10 +47,15 @@ function horizontalControls()
     end
 end
 
+function daveMovement()
+    
+end
+
 function love.update()
     verticalControls()
     horizontalControls()
 end
+
 
 function love.draw()
     dave = love.graphics.rectangle("line", x, y, 40, 40)
