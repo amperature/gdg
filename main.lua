@@ -48,7 +48,8 @@ function board()
     elseif x < 275 then
         x = 500
     if y > 520 then
-        y > 520
+        y = 520
+    end
 end
 
 function horizontalControls()
