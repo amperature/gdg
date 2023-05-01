@@ -1,11 +1,13 @@
 function love.load()
-    x = 4
-    y = 1
-    das = 0
-    arr = 6
+    x = 5 -- xcoords in cells
+    y = 2
+    das = 0 -- delay auto shift
+    arr = 6 -- there be treasure (auto repeat rate)
+    linesCleared = 0 -- keeps track of lines
     dasdirection = 'right'
     bgImage = love.graphics.newImage("tetgrand.png")
     rotation = 1
+    piecenames = {'j', 'i', 'z', 'l', 'o', 't', 's',} -- the bag
     pieces = {
         i = {
             {{-1, 0}, {0, 0}, {1, 0}, {2, 0}},
@@ -18,6 +20,36 @@ function love.load()
             {{0, 0}, {1, 0}, {0, 1}, {1, 1}},
             {{0, 0}, {1, 0}, {0, 1}, {1, 1}},
             {{0, 0}, {1, 0}, {0, 1}, {1, 1}},
+        },
+        j = {
+            {{-1, -1}, {-1, 0}, {0, 0}, {1, 0}},
+            {{1, -1}, {0, -1}, {0, 0}, {0, 1}},
+            {{-1, 0}, {0, 0}, {1, 0}, {1, 1}},
+            {{0, -1}, {0, 0}, {0, 1}, {-1, 1}},
+        },
+        l = {
+            {{1, -1}, {-1, 0}, {0, 0}, {1, 0}},
+            {{0, -1}, {0, 0}, {0, 1}, {1, 1}},
+            {{-1, 0}, {0, 0}, {1, 0}, {-1, 1}},
+            {{0, -1}, {0, 0}, {0, 1}, {-1, -1}},
+        },
+        t = {
+            {{0, -1}, {-1, 0}, {0, 0}, {1, 0}},
+            {{0, -1}, {0, 0}, {0, 1}, {1, 0}},
+            {{-1, 0}, {0, 0}, {1, 0}, {0, 1}},
+            {{0, -1}, {0, 0}, {0, 1}, {-1, 0}},
+        },        
+        s = {
+            {{1, -1}, {0, -1}, {0, 0}, {-1, 0}},
+            {{0, -1}, {0, 0}, {1, 0}, {1, 1}},
+            {{1, 0}, {0, 0}, {0, 1}, {-1, 1}},
+            {{-1, -1}, {-1, 0}, {0, 0}, {0, 1}},
+        },
+        z = {
+            {{-1, -1}, {0, -1}, {0, 0}, {1, 0}},
+            {{1, -1}, {1, 0}, {0, 0}, {0, 1}},
+            {{-1, 0}, {0, 0}, {0, 1}, {1, 1}},
+            {{0, -1}, {0, 0}, {-1, 0}, {-1, 1}},
         }
     }
     grid = {
@@ -41,40 +73,68 @@ function love.load()
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                            
+        -- the grid. 0 = unoccupied, 1 = occupied                    
     }
-    currentPiece = pieces.i
+    currentPiece = randomizer()
 end
 
+function randomizer() --randomizes stuff
+    local bag = {"l", "j", "s", "z", "t", "i", "o"}
+    queue = {}
+    table.insert(queue, pieces[bag[math.random(1, #bag)]])
+    print(queue)
+    return pieces[bag[math.random(1, #bag)]]
+    --return queue[1] --  the math
+end
+
+function holdPiece()
+    local hold = {}
+    table.insert(hold, currentPiece)
+    --print(hold)
+end
 
 function renderGrid()
     for i = 1, 20 do
         for j = 1, 10 do
             if grid[i][j] == 1 then
-                love.graphics.rectangle("line", j * 25 + 250, i * 25, 25, 25)
+                love.graphics.rectangle("fill", j * 25 + 250, i * 25, 25, 25)
             end
         end
     end
 end
 
-function rotatePiece()
-    rotation = rotation % 4 + 1
-end
-
-function lockPiece(piece)
-    for i, v in ipairs(piece[rotation]) do
-        grid[math.floor(y + v[2])][math.floor(x + v[1])] = 1
+function clearLine()
+    for j = 1, 20 do -- scans rows
+        local hasHole = false -- tracks holes
+        for i = 1, 10 do -- scans columns
+            if grid[j][i] == 0 then
+                hasHole = true
+            end
+        end
+        if hasHole == false then -- clears lines and then reinserts them based on j many lines
+            table.remove(grid, j)
+            table.insert(grid, 1, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+            linesCleared = linesCleared + 1
+        end
     end
 end
 
-function isValidPiece(piece, offsetX, offsetY)
-    offsetX = offsetX or 0
-    offsetY = offsetY or 0
+function applyPiece(piece)
     for i, v in ipairs(piece[rotation]) do
+        grid[math.floor(y + v[2])][math.floor(x + v[1])] = 1 --
+    end
+end
+
+function isValidPiece(piece, offsetX, offsetY, newRotation)
+    offsetX = offsetX or 0 --translateX
+    offsetY = offsetY or 0 --translateY
+    newRotation = newRotation or rotation --new rotation
+    for i, v in ipairs(piece[newRotation]) do
         if math.floor(y + v[2] + offsetY) > 20 
         or math.floor(y + v[2] + offsetY) < 1 
         or math.floor(x + v[1] + offsetX) > 10
         or math.floor(x + v[1] + offsetX) < 1
+        -- setting boundaries for movement
         then
             return false
         end
@@ -88,8 +148,7 @@ end
 function renderPiece(piece)
     for i, v in ipairs(piece[rotation]) do
         love.graphics.rectangle("fill", math.floor(x + v[1]) * 25 + 250, math.floor(y + v[2]) * 25, 25, 25)
-    end
-    
+    end 
 end
 
 function movePiece(piece, offsetX, offsetY)
@@ -99,11 +158,18 @@ function movePiece(piece, offsetX, offsetY)
     end
 end
 
+function rotatePiece()
+    newRotation = rotation % 4 + 1
+    if isValidPiece(currentPiece, 0, 0, newRotation) then
+        rotation = newRotation 
+    end
+end
+
 function movementControls()
     if love.keyboard.isDown('left') then
         dasdirection = 'left'
         if dasdirection == 'left' then
-            das = das + 1 --this is right
+            das = das + 1 
             if das > 15 then
                 movePiece(currentPiece, -1, 0)
                 das = das - arr
@@ -127,33 +193,38 @@ function movementControls()
     end
     if love.keyboard.isDown('down') then
         movePiece(currentPiece, 0, 0.4)
+        lockPiece()
+    end
+end
+
+function lockPiece()
+    if isValidPiece(currentPiece) then
+        if not isValidPiece(currentPiece, 0, 1) then
+            applyPiece(currentPiece) -- "freezes" piece
+            currentPiece = randomizer() -- changes piece
+            x = 5 -- back to spawn
+            y = 4 
+        end
     end
 end
 
 function love.keypressed(key, scancode, isrepeat)
-    if key == 'space' then
-        if isValidPiece(currentPiece) then
-            lockPiece(currentPiece)
-            x = 4
-            y = 1
-        end
-    elseif key == 'up' then
+    if key == 'up' then
         rotatePiece()
+    end
+    if key == 'space' then
+        holdPiece()
     end
 end
 
---function horizontalControls()
-
---end
-
 function love.update()
     movementControls()
+    clearLine()
 end
 
 
 function love.draw()
     love.graphics.draw(bgImage, 0, 0)
-    --love.graphics.draw(dave, x, y)
     renderGrid()
     renderPiece(currentPiece)
     love.graphics.print(dasdirection, 0, 0)
@@ -161,4 +232,5 @@ function love.draw()
     love.graphics.print(x, 100, 30)
     love.graphics.print(y, 100, 50)
     love.graphics.print(rotation, 100, 70)
+    love.graphics.printf(linesCleared, 100, 90, 50)
 end
