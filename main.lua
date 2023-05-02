@@ -1,12 +1,17 @@
 function love.load()
+    math.randomseed(os.time())
+    numbers = love.graphics.setNewFont(40)
+    texts = love.graphics.setNewFont(20)
     x = 5 -- xcoords in cells
     y = 2
     das = 0 -- delay auto shift
     arr = 6 -- there be treasure (auto repeat rate)
     linesCleared = 0 -- keeps track of lines
+    levels = 0 -- TGM LEVELS! go watch my video on tgm please itll explain everything
     dasdirection = 'right'
     bgImage = love.graphics.newImage("tetgrand.png")
     rotation = 1
+    gravity = 0
     piecenames = {'j', 'i', 'z', 'l', 'o', 't', 's',} -- the bag
     pieces = {
         i = {
@@ -76,13 +81,11 @@ function love.load()
         -- the grid. 0 = unoccupied, 1 = occupied                    
     }
     currentPiece = randomizer()
+    nextPiece = randomizer()
 end
 
 function randomizer() --randomizes stuff
     local bag = {"l", "j", "s", "z", "t", "i", "o"}
-    queue = {}
-    table.insert(queue, pieces[bag[math.random(1, #bag)]])
-    print(queue)
     return pieces[bag[math.random(1, #bag)]]
     --return queue[1] --  the math
 end
@@ -115,6 +118,7 @@ function clearLine()
             table.remove(grid, j)
             table.insert(grid, 1, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
             linesCleared = linesCleared + 1
+            levels = levels + 1
         end
     end
 end
@@ -147,8 +151,20 @@ end
 
 function renderPiece(piece)
     for i, v in ipairs(piece[rotation]) do
-        love.graphics.rectangle("fill", math.floor(x + v[1]) * 25 + 250, math.floor(y + v[2]) * 25, 25, 25)
+        love.graphics.rectangle(
+            "fill", 
+            math.floor(x + v[1]) * 25 + 250, -- x
+            math.floor(y + v[2]) * 25, -- y
+            25, -- width
+            25 -- height
+        )
     end 
+end
+
+function renderNext(piece)
+    for i, v in ipairs(piece[1]) do
+        love.graphics.rectangle("fill", v[1] * 25 + 550, v[2] * 25 + 80, 25, 25)
+    end
 end
 
 function movePiece(piece, offsetX, offsetY)
@@ -192,18 +208,34 @@ function movementControls()
         das = 0
     end
     if love.keyboard.isDown('down') then
-        movePiece(currentPiece, 0, 0.4)
-        lockPiece()
+        addGravity(30)
     end
+end
+
+function addGravity(speed)
+    gravity = gravity + speed
+    while gravity >= 60 do
+        movePiece(currentPiece, 0, 1)  
+        lockPiece()    
+        gravity = gravity - 60
+    end
+end
+
+function lockDelay()
+
 end
 
 function lockPiece()
     if isValidPiece(currentPiece) then
         if not isValidPiece(currentPiece, 0, 1) then
             applyPiece(currentPiece) -- "freezes" piece
-            currentPiece = randomizer() -- changes piece
+            currentPiece = nextPiece -- assigns currentpiece to next piece
+            nextPiece = randomizer() -- chooses next piece
+            print(nextPiece)
             x = 5 -- back to spawn
-            y = 4 
+            y = 2
+            rotation = 1
+            levels = levels + 1
         end
     end
 end
@@ -218,6 +250,7 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.update()
+    addGravity(1)
     movementControls()
     clearLine()
 end
@@ -227,10 +260,18 @@ function love.draw()
     love.graphics.draw(bgImage, 0, 0)
     renderGrid()
     renderPiece(currentPiece)
+    renderNext(nextPiece)
+    love.graphics.setFont(texts)
+    love.graphics.print('LINES', 270, 575)
+    love.graphics.print('LEVEL', 384, 575)
     love.graphics.print(dasdirection, 0, 0)
     love.graphics.print(das, 0, 30)
     love.graphics.print(x, 100, 30)
     love.graphics.print(y, 100, 50)
     love.graphics.print(rotation, 100, 70)
-    love.graphics.printf(linesCleared, 100, 90, 50)
+    love.graphics.print(gravity, 100, 90)
+    love.graphics.setFont(numbers)
+    love.graphics.print(linesCleared, 285, 530)
+    love.graphics.print(levels, 400, 530)
+   
 end
