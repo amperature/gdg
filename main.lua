@@ -1,7 +1,22 @@
 function love.load()
+    paused = false
+    bgmusic1 = love.audio.newSource("BROOKLINE.mp3", "stream")
+    droppiece = love.audio.newSource("placePiece.mp3", "static")
+    bgmusic1:setVolume(0.3)
+    droppiece:setVolume(0.5)
+    backgrounds = {
+        love.graphics.newImage('0.png'),
+        love.graphics.newImage('1.png'),
+        love.graphics.newImage('2.png'),
+        love.graphics.newImage('3.png'),
+    }
     math.randomseed(os.time())
+    width = love.graphics.getWidth()
+    height = love.graphics.getHeight()
     numbers = love.graphics.setNewFont(40)
     texts = love.graphics.setNewFont(20)
+    endgame = love.graphics.print('Game Over')
+    background = backgrounds[1]
     x = 5 -- xcoords in cells
     y = 2
     das = 0 -- delay auto shift
@@ -9,9 +24,10 @@ function love.load()
     linesCleared = 0 -- keeps track of lines
     levels = 0 -- TGM LEVELS! go watch my video on tgm please itll explain everything
     dasdirection = 'right'
-    bgImage = love.graphics.newImage("tetgrand.png")
+    board = love.graphics.newImage("tetgrand.png")
     rotation = 1
     gravity = 0
+    lockDelay = 30
     piecenames = {'j', 'i', 'z', 'l', 'o', 't', 's',} -- the bag
     pieces = {
         i = {
@@ -127,7 +143,19 @@ function applyPiece(piece)
     for i, v in ipairs(piece[rotation]) do
         grid[math.floor(y + v[2])][math.floor(x + v[1])] = 1 --
     end
+    currentPiece = nextPiece -- assigns currentpiece to next piece
+    nextPiece = randomizer() -- chooses next piece
+    --print(nextPiece)
+    x = 5 -- back to spawn
+    y = 2
+    rotation = 1
+    levels = levels + 1
 end
+
+function getBackground()
+    return backgrounds[math.floor(levels/100) % 4 + 1]
+end
+
 
 function isValidPiece(piece, offsetX, offsetY, newRotation)
     offsetX = offsetX or 0 --translateX
@@ -212,30 +240,32 @@ function movementControls()
     end
 end
 
+function getSpeed()
+    return math.min(math.max(1, math.floor(levels/20)), 60)
+end
+
 function addGravity(speed)
     gravity = gravity + speed
     while gravity >= 60 do
         movePiece(currentPiece, 0, 1)  
-        lockPiece()    
         gravity = gravity - 60
     end
-end
-
-function lockDelay()
-
+    lockPiece()
 end
 
 function lockPiece()
     if isValidPiece(currentPiece) then
         if not isValidPiece(currentPiece, 0, 1) then
-            applyPiece(currentPiece) -- "freezes" piece
-            currentPiece = nextPiece -- assigns currentpiece to next piece
-            nextPiece = randomizer() -- chooses next piece
-            print(nextPiece)
-            x = 5 -- back to spawn
-            y = 2
-            rotation = 1
-            levels = levels + 1
+            lockDelay = lockDelay - 1
+            if lockDelay == 0 then 
+                applyPiece(currentPiece) -- "freezes" piece
+                lockDelay = 30
+                droppiece:play()
+            end
+        end
+        if not isValidPiece(currentPiece, 0, 0) then
+            love.graphics.print('GAME OVER', 320, 240)
+            love.event.quit('restart')
         end
     end
 end
@@ -247,31 +277,51 @@ function love.keypressed(key, scancode, isrepeat)
     if key == 'space' then
         holdPiece()
     end
+    if key == 'p' then
+        if paused == false then 
+            paused = true
+        elseif paused == true then
+            paused = false
+        end
+    end
 end
 
 function love.update()
-    addGravity(1)
-    movementControls()
-    clearLine()
+    if paused == false then
+        addGravity(getSpeed())
+        movementControls()
+        clearLine()
+    end
 end
 
-
+function gameRunning()
+    if paused == false then
+        bgmusic1:play()
+        --love.graphics.draw(getBackground())
+        --love.graphics.draw(board, 0, 0)
+        renderGrid()
+        renderPiece(currentPiece)
+        renderNext(nextPiece)
+    elseif paused == true then
+        love.graphics.print('PAUSED', 320, 240)
+        bgmusic1:pause()
+    end
+end
+ 
 function love.draw()
-    love.graphics.draw(bgImage, 0, 0)
-    renderGrid()
-    renderPiece(currentPiece)
-    renderNext(nextPiece)
+    -- bgmusic1:play()
+    love.graphics.draw(getBackground())
+    love.graphics.draw(board, 0, 0)
+    gameRunning()
     love.graphics.setFont(texts)
     love.graphics.print('LINES', 270, 575)
-    love.graphics.print('LEVEL', 465, 575)
-    love.graphics.print(dasdirection, 0, 0)
-    love.graphics.print(das, 0, 30)
-    love.graphics.print(x, 100, 30)
-    love.graphics.print(y, 100, 50)
-    love.graphics.print(rotation, 100, 70)
-    love.graphics.print(gravity, 100, 90)
+    love.graphics.print('SPEED', 465, 575)
+    --love.graphics.print(dasdirection, 0, 0)
+    --love.graphics.print(x, 100, 30)
+    --love.graphics.print(y, 100, 50)
+    --love.graphics.print(rotation, 100, 70)
+    --love.graphics.print(lockDelay, 100, 90)
     love.graphics.setFont(numbers)
-    love.graphics.print(linesCleared, 275, 530)
-    love.graphics.print(levels, 500, 530, align = 'right')
-   
+    love.graphics.print(linesCleared, 270, 530)
+    love.graphics.print(levels, 460, 530)
 end
