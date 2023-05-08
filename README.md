@@ -28,4 +28,4 @@ Space = Instant Drop
 The gameplay is very similar to the hit stacking game Tetris. In the game, you have to stack blocks grouped up in 4s (known as Tetriminos) and clear lines by filling the entire horizontal row. The more lines you clear, the further you progress in the game, where the pieces start to drop automatically faster and faster. 
 
 ## Interface
-To the right, you will see 
+At the bottom, you will see 2 counters: the line counter, which 
