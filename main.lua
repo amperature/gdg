@@ -1,9 +1,10 @@
 function love.load()
+    pausedText = 'Paused'
     paused = false
     bgmusic1 = love.audio.newSource("BROOKLINE.mp3", "stream")
     droppiece = love.audio.newSource("placePiece.mp3", "static")
-    bgmusic1:setVolume(0.3)
-    droppiece:setVolume(0.5)
+    bgmusic1:setVolume(0.2)
+    droppiece:setVolume(0.3)
     backgrounds = {
         love.graphics.newImage('0.png'),
         love.graphics.newImage('1.png'),
@@ -23,7 +24,7 @@ function love.load()
     arr = 6 -- there be treasure (auto repeat rate)
     linesCleared = 0 -- keeps track of lines
     levels = 0 -- TGM LEVELS! go watch my video on tgm please itll explain everything
-    dasdirection = 'right'
+    dasdirection = 'right' -- which way das is going
     board = love.graphics.newImage("tetgrand.png")
     rotation = 1
     gravity = 0
@@ -100,17 +101,23 @@ function love.load()
     nextPiece = randomizer()
 end
 
+local clock = os.clock
+function sleep(n)  -- seconds
+  local t0 = clock()
+  while clock() - t0 <= n do end
+end -- i borrowed this from lua-users.org
+
 function randomizer() --randomizes stuff
     local bag = {"l", "j", "s", "z", "t", "i", "o"}
     return pieces[bag[math.random(1, #bag)]]
     --return queue[1] --  the math
 end
 
-function holdPiece()
-    local hold = {}
-    table.insert(hold, currentPiece)
-    --print(hold)
-end
+-- function holdPiece()
+--     local hold = {}
+--     table.insert(hold, currentPiece)
+--     --print(hold)
+-- end
 
 function renderGrid()
     for i = 1, 20 do
@@ -123,7 +130,7 @@ function renderGrid()
 end
 
 function clearLine()
-    for j = 1, 20 do -- scans rows
+    for j = 1, 20 do -- scans rows with j
         local hasHole = false -- tracks holes
         for i = 1, 10 do -- scans columns
             if grid[j][i] == 0 then
@@ -152,6 +159,8 @@ function applyPiece(piece)
     levels = levels + 1
 end
 
+
+
 function getBackground()
     return backgrounds[math.floor(levels/100) % 4 + 1]
 end
@@ -171,7 +180,7 @@ function isValidPiece(piece, offsetX, offsetY, newRotation)
             return false
         end
         if grid[math.floor(y + v[2] + offsetY)][math.floor(x + v[1] + offsetX)] == 1 then
-            return false
+            return false -- basically checking offsets and if they are occupied.
         end
     end
     return true
@@ -241,7 +250,7 @@ function movementControls()
 end
 
 function getSpeed()
-    return math.min(math.max(1, math.floor(levels/20)), 60)
+    return math.min(math.max(1, math.floor(levels/40)), 60)
 end
 
 function addGravity(speed)
@@ -264,7 +273,8 @@ function lockPiece()
             end
         end
         if not isValidPiece(currentPiece, 0, 0) then
-            love.graphics.print('GAME OVER', 320, 240)
+            sleep(2)
+            paused = true
             love.event.quit('restart')
         end
     end
@@ -274,15 +284,21 @@ function love.keypressed(key, scancode, isrepeat)
     if key == 'up' then
         rotatePiece()
     end
-    if key == 'space' then
-        holdPiece()
-    end
+    -- if key == 'space' then
+    --     holdPiece()
+    -- end
     if key == 'p' then
         if paused == false then 
             paused = true
         elseif paused == true then
             paused = false
         end
+    end
+end
+
+function gameEnds()
+    if levels >= 500 then
+        print('END')
     end
 end
 
@@ -303,7 +319,7 @@ function gameRunning()
         renderPiece(currentPiece)
         renderNext(nextPiece)
     elseif paused == true then
-        love.graphics.print('PAUSED', 320, 240)
+        love.graphics.print(pausedText, 320, 240)
         bgmusic1:pause()
     end
 end
@@ -316,7 +332,7 @@ function love.draw()
     love.graphics.setFont(texts)
     love.graphics.print('LINES', 270, 575)
     love.graphics.print('SPEED', 465, 575)
-    --love.graphics.print(dasdirection, 0, 0)
+    --love.graphics.print(das, 0, 0)
     --love.graphics.print(x, 100, 30)
     --love.graphics.print(y, 100, 50)
     --love.graphics.print(rotation, 100, 70)
