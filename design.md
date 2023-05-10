@@ -1,30 +1,12 @@
 # Design Document
 
-Let me begin by saying I had gotten a lot of help from 🦞🎮, the creator of the well known arcade stacker Cambridge, and Oshisaure, another game developer and content creator on the game. They helped me through learning Lua and LOVE2D in less than a month and I am very grateful for their help.
-
-I will be breaking down the code in order to accompany the comments I have made in the code.
-Before that, however, I need to explain how coding in LOVE2D works.
-
-There are 3 essential callback functions that are required: 
-
-```love.load```
-is the function where you load objects.
-
-```love.update```
-is the function that runs every frame.
-
-```love.draw```
-is the function that handles graphics.
-
-There are many other functions that are used in this game, but each of those functions all go into either one of these 3, mostly love.draw.
+This is the design document for Brookline: The Arcade Stacker, a Tetris-like fangame using Lua and the LOVE2D game engine. 
 
 ## Tetraminos
 
 ### How it Works
 There are 7 Tetraminos in the game: 
 I, J, L, O, Z, S and T. Each of these Tetraminos is made up of 4 different individual "minos" which are 25x25 squares. Along with these 4 pieces, there are 4 rotation states for each system which are defined.
-
-That's right, the game isn't really rotating the pieces. Instead, it's just repositioning the pieces so that it looks like it's rotating. This is how many Tetris clones deal with rotating, and its how people are able to create different ways of rotating the Tetraminos in other games.
 
 Right now, I am using the Super Rotation System, which is used in a variety of modern Tetris games, but there are plenty of other ways to rotate pieces! I could go into more detail later on in video format but for now, let's move on.
 
@@ -43,11 +25,11 @@ Here's what the I piece looks like in the code:
         },
 ```
 
-As you can see, there are 4 different rotation states provided, which I call using the rotation variable 
+As you can see, there are 4 different rotation states provided, which I call using the rotation variable (which is a number between 1-4).
 
 ### Rendering Pieces
 
-Now that I've defined the pieces, it's time to render them! This is the function **renderPiece()**, which renders the piece as it comes into the grid.
+Rendering pieces happens in the function **renderPiece()**, which renders the piece as it comes into the grid.
 
 ```function renderPiece(piece)
     for i, v in ipairs(piece[rotation]) do
@@ -66,32 +48,24 @@ For reference, **x and y** are the coordinates of the pieces, which are controll
 
 The for loop essentially cycles through all the minos **i** times using **v** that are declared until it runs out. This is useful if I want to add more stuff.
 
-This function is also used when rendering the nextPiece, although it calls a different piece through the randomizer (which will be talked about later)
+This function is also used when rendering the nextPiece, although it calls a different piece through the randomizer (which will be talked about later).
 
 ## Board
 The board is represented by a 10x20 table of 0s and 1s called "grid". Each value represents a place on the board, as shown by this diagram here below.
 
 The 0 means that the cell is unoccupied, while the 1 means it's occupied. Pretty simple.
 
-The process of figuring out when its occupied and unoccupied only happens when it's applied to the board using applyPiece, which I will get to later. For now..
-
-## Movement
-It's time to move!  Well, almost.
-
-Like a good healthy relationship, we need to set some boundaries first before we take things fast. 
-
-### Piece Application
-First, we need to apply the piece to the board.
-
-Here's what I did in applyPiece:
+The process of figuring out when its occupied and unoccupied only happens when it's applied to the board using applyPiece, which is described below.
 
 ```
+function applyPiece(piece)
     for i, v in ipairs(piece[rotation]) do
         grid[math.floor(y + v[2])][math.floor(x + v[1])] = 1 --
     end
 end
 ```
-Basically, it takes the argument "piece" (which is the most current piece) and runs it through the for loop, and assigns the coordinates of the piece into the grid, then sets the value of them to 1 meaning that they're occupied now.
+
+Basically, it takes the argument "piece" (which is the most current piece) and runs the positions of the squares of the piece through the for loop, and assigns the coordinates of the squares onto the grid, then sets the value of them to 1 meaning that they're occupied now.
 
 Once that's done, it's time to render the grid to update this change using renderGrid():
 
@@ -106,7 +80,7 @@ function renderGrid()
     end
 end
 ```
-This cycles through every single cell, and if said cell is 1 then it renders those cells to be onto the board as garbage.
+This cycles through every single cell, and if said cell is 1 then it marks those cells to be rendered onto the board.
 
 ### Piece Validity
 Now we need to validate the pieces. Validating is the process of making sure that the pieces are locking in the first place, as well as not breaking the boundaries of the grid.
@@ -114,7 +88,7 @@ Now we need to validate the pieces. Validating is the process of making sure tha
 Here's the function that handles piece validity, called isValidPiece()
 
 ```
-    function isValidPiece(piece, offsetX, offsetY, newRotation)
+function isValidPiece(piece, offsetX, offsetY, newRotation)
     offsetX = offsetX or 0 --translateX
     offsetY = offsetY or 0 --translateY
     newRotation = newRotation or rotation --new rotation
@@ -131,16 +105,17 @@ Here's the function that handles piece validity, called isValidPiece()
             return false -- basically checking offsets and if they are occupied.
         end
     end
+end
 ```
 
-**offsetX and offsetY** are basically the translate functions of the whole piece, not just the individual minos. These are used to not only move the pieces left and right, but also to check the space around the piece.
+**offsetX and offsetY** are basically values that translate the whole piece, not just the individual minos. These are used to not only move the pieces left and right, but also to check the space around the piece.
 
-The first if statement in the loop is setting the boundaries so that the pieces dont escape the 10x20 grid.
+The first if statement in the loop is setting the boundaries so that the pieces don't escape the 10x20 grid.
 
-The second if statement is checking if the offests are occupied already: we do this by checking if the value is 1 or not, which we did using applyPiece()
+The second if statement is checking if the positions are occupied already: we do this by checking if the value is 1 or not, which we did using applyPiece().
 
 ### Piece Lock
-Now it's time to lock and load. Here's what lockPiece() looks like: 
+Here's what lockPiece() looks like: 
 
 ```
 function lockPiece()
@@ -162,11 +137,11 @@ function lockPiece()
 end
 ```
 
-The outer if statement is where isValidPiece is called in to check if the piece is valid. If it is, then it checks 2 specific states:
+The outer if statement checks if the piece is valid. If it is, then it checks 2 specific states:
 
-The first state is if it's colliding with another piece. If it does, then the piece is applied to the grid and is cemented it's place on the board, unable to move.
+The first state is if it's colliding with another piece. If it does, then the piece is applied to the grid and has cemented its place on the board, unable to move.
 
-The second state is if it collides with itself, which only happens when you top out.
+The second state is if it collides with the stack when it enters the board, which only happens when you top out.
 
 ### Movement (for real)
 To do this, we first use movePiece to link x and y to offsetX and offsetY.
@@ -222,12 +197,10 @@ function addGravity(speed)
 end
 ```
 
-All that was left is to put getSpeed() into addGravity() and I was able to make the pieces move down by themselves!
-
-Additionally, if you hit down while playing, you can make the piece go faster. This was just an effort of putting in a fixed value for addGravity, in case 30.
+Additionally, if you hit down while playing, you can make the piece go faster. This is achieved by putting in a fixed value for addGravity, in case 30.
 
 ## Randomizer
-Setting up a randomizer is one thing I wish I put more time into because the one that's currently in Brookline is a little harsh. This is because in modern Tetris games, the randomizer isn't actually random, it's randomized in clusters of 7, which makes the game a lot more predictable and easier. Simon Laroche made a [very good article that goes into more depth on the history of randomizers](https://simon.lc/the-history-of-tetris-randomizers), which I tried to implement into my game, but had some trouble with. This is why I ended up resorting to using a truly random randomizer, where it's fair game as to what piece you'll get.
+In modern Tetris games, the randomizer isn't actually random, it's randomized in clusters of 7, which makes the game a lot more predictable and easier. Simon Laroche made a [very good article that goes into more depth on the history of randomizers](https://simon.lc/the-history-of-tetris-randomizers). Due to time constraints though, I ended up using a truly random randomizer, where it's fair game as to what piece you'll get.
 
 Setting this up was simple; I made a randomizer function that creates a bag and then fully randomizes whatever comes next using math.random. 
 
@@ -244,9 +217,8 @@ I then assigned the randomizer to the currentPiece variable and the nextPiece va
 Then, it's a matter of setting the currentPiece to nextPiece and setting the nextPiece to whatever the randomizer has, so that nextPiece is always one step ahead to show you what's coming up.
 
 ### Clearing Lines
-Clearing lines in Tetris is an integral part of the game. If it wasn't there then the game would end easily. 
 
-Here's how I approached it:
+The function scans each cell to see if any rows are horizontally full by checking if there are any unoccupied spaces in the row (hence hasHoles, but this applies to empty rows too). This is checked row by row separately by setting hasHole to be false.
 
 ```
 function clearLine()
@@ -267,8 +239,6 @@ function clearLine()
 end
 ```
 
-Basically, the function scans each cell to see if any rows are horizontally full by checking if there are any unoccupied spaces in the row (hence hasHoles, but this applies to empty rows too). This is checked row by row separately by setting hasHole to be false.
-
 The if statement is then actually clearing lines and reinserting them based on how many lines were listed as having no holes, which is j.
 
 ## UI
@@ -281,4 +251,13 @@ end
 ```
 
 ## Sounds
-I made the soundtrack of 1 song in 3 hours with a lot of Analog Lab V and Serum. It was also easy to implement since LOVE2D 
+I made the soundtrack of 1 song in 3 hours with a lot of Analog Lab V and Serum. It was also easy to implement since LOVE2D had native sound support.
+
+## Pausing & Restarting
+The way I implemented pausing was to have a variable called paused, and then created a function called gameRunning() which took important elements of the game and wrapped them all into an if statement that checked whether paused was false, and would only run the code if it was.
+
+Restarting was covered using love.event.quit('restart'), which restarts the game and reloads everything, as well as using a sleep timer function provided by lua-users.org.
+
+## Credits
+
+Let me end by saying I had gotten a lot of help from 🦞🎮, the creator of the well known arcade stacker Cambridge, and Oshisaure, another game developer and content creator on the game. They helped me through learning Lua and LOVE2D in less than a month and I am very grateful for their help. Thank you.

@@ -10,7 +10,6 @@ In order to run Brookline, you must have [LÖVE2D](https://love2d.org/) installe
 
 However, if you are on **macOS** or **Linux**, then you will need to install LÖVE by downloading it, then dragging and dropping the .love file of Brookline into the LÖVE executable.
 
-
 ## Controls
 Up Arrow = Rotate Clockwise
 

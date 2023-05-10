@@ -2,21 +2,23 @@ function love.load()
     pausedText = 'Paused'
     paused = false
     bgmusic1 = love.audio.newSource("BROOKLINE.mp3", "stream")
-    droppiece = love.audio.newSource("placePiece.mp3", "static")
-    bgmusic1:setVolume(0.2)
+    droppiece = love.audio.newSource("placePiece.wav", "static")
+    clearLines = love.audio.newSource("clearLines.wav", "static")
+    bgmusic1:setVolume(0.2)   
     droppiece:setVolume(0.3)
+    clearLines:setVolume(0.3)
     backgrounds = {
         love.graphics.newImage('0.png'),
         love.graphics.newImage('1.png'),
         love.graphics.newImage('2.png'),
         love.graphics.newImage('3.png'),
+        love.graphics.newImage('4.png'),     
     }
     math.randomseed(os.time())
     width = love.graphics.getWidth()
     height = love.graphics.getHeight()
     numbers = love.graphics.setNewFont(40)
     texts = love.graphics.setNewFont(20)
-    endgame = love.graphics.print('Game Over')
     background = backgrounds[1]
     x = 5 -- xcoords in cells
     y = 2
@@ -142,6 +144,7 @@ function clearLine()
             table.insert(grid, 1, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
             linesCleared = linesCleared + 1
             levels = levels + 1
+            clearLines:play()
         end
     end
 end
@@ -274,7 +277,6 @@ function lockPiece()
         end
         if not isValidPiece(currentPiece, 0, 0) then
             sleep(2)
-            paused = true
             love.event.quit('restart')
         end
     end
@@ -296,12 +298,6 @@ function love.keypressed(key, scancode, isrepeat)
     end
 end
 
-function gameEnds()
-    if levels >= 500 then
-        print('END')
-    end
-end
-
 function love.update()
     if paused == false then
         addGravity(getSpeed())
@@ -313,8 +309,6 @@ end
 function gameRunning()
     if paused == false then
         bgmusic1:play()
-        --love.graphics.draw(getBackground())
-        --love.graphics.draw(board, 0, 0)
         renderGrid()
         renderPiece(currentPiece)
         renderNext(nextPiece)
@@ -325,13 +319,13 @@ function gameRunning()
 end
  
 function love.draw()
-    -- bgmusic1:play()
     love.graphics.draw(getBackground())
     love.graphics.draw(board, 0, 0)
     gameRunning()
     love.graphics.setFont(texts)
     love.graphics.print('LINES', 270, 575)
     love.graphics.print('SPEED', 465, 575)
+    --below is debug stuff
     --love.graphics.print(das, 0, 0)
     --love.graphics.print(x, 100, 30)
     --love.graphics.print(y, 100, 50)
