@@ -1,8 +1,8 @@
-# GDG
+# GDG/Brookline
 
 ## Overview
 
-GDG is an arcade stacker that's focused around moving a piece and clearing lines to score points.
+GDG [aka Brookline] is an arcade stacker that's focused around moving a piece and clearing lines to score points.
 
 ## Instructions
 In order to run GDG, you must have [LÖVE2D](https://love2d.org/) installed. If you are on **Windows**, then there is no need to install LÖVE, since it comes with the program.
