@@ -7,9 +7,9 @@ GDG [aka Brookline] is an arcade stacker that's focused around moving a piece an
 This project was originally a game I made for my programming class's final project, but I decided I wanted to upload the whole thing cause I'm really proud of it.
 
 ## Instructions
-In order to run GDG, you must have [LÖVE2D](https://love2d.org/) installed. If you are on **Windows**, then there is no need to install LÖVE, since it comes with the program.
+In order to run GDG, you must have [LÖVE2D](https://love2d.org/) installed.
 
-However, if you are on **macOS** or **Linux**, then you will need to install LÖVE by downloading it, then dragging and dropping the .love file of GDG into the LÖVE executable.
+Once it's done, simply double click and play!
 
 ## Controls
 Up Arrow = Rotate Clockwise
