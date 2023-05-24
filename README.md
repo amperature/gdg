@@ -4,7 +4,7 @@
 
 GDG [aka Brookline] is an arcade stacker that's focused around moving a piece and clearing lines to score points. 
 
-This project was originally a game I made for my programming class's final project, but I decided I wanted to upload the whole thing cause I'm really proud of it.
+This project was originally a game I made for my programming class's final project. 
 
 ## Instructions
 In order to run GDG, you must have [LÖVE2D](https://love2d.org/) installed.
